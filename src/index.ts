@@ -29,6 +29,12 @@ import {
   IRawProcessor,
   ConsumerHub,
 } from "./ConsumerHub";
+import { 
+  AbstractController,
+  ApiEndpoint,
+  ApiHandler,
+  IContext,
+} from "./AbstractController";
 
 export {
   StreamHandler,
@@ -52,4 +58,8 @@ export {
   IConsumerProcess,
   IRawProcessor,
   ConsumerHub,
+  AbstractController,
+  ApiEndpoint,
+  ApiHandler,
+  IContext,
 };
