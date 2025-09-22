@@ -22,8 +22,8 @@ declare class PromiseState<T> {
 }
 declare interface ISendMessage {
     topic: string;
-    subject?: PromiseState<IMessage>;
-    message: IMessage | any;
+    subject?: PromiseState<IMessage<any>>;
+    message: IMessage<any> | any;
     timeout?: number;
     sendType?: number;
     raw?: boolean;
@@ -32,14 +32,14 @@ declare interface IResponseDestination {
     topic: string;
     uri: string;
 }
-declare interface IMessage {
+declare interface IMessage<T> {
     messageType: MessageType;
     sourceId?: string;
     messageId: string;
     transactionId: string | number;
     uri?: string;
     responseDestination?: IResponseDestination;
-    data: any;
+    data: T;
     t?: number;
     et?: number;
     stream?: boolean;

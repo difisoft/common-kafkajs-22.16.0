@@ -4,7 +4,7 @@ import { IKafkaMessage, StreamHandler } from "@/StreamHandler";
 import { logger } from "common-model";
 
 export interface IConsumerProcess {
-  process(msg: IMessage): void;
+  process(msg: IMessage<any>): void;
 }
 
 export interface IRawProcessor {
@@ -41,7 +41,7 @@ export class ConsumerHub {
           const processor = mapping[message.topic];
           if (processor != null) {
             const msgString: string = message.value.toString();
-            const msg: IMessage = JSON.parse(msgString);
+            const msg: IMessage<any> = JSON.parse(msgString);
             try {
               processor.process(msg);
             } catch (e) {

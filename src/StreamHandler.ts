@@ -32,6 +32,13 @@ class StreamHandler {
 
     this.consumer = kafka.consumer({
       groupId: conf.clusterId,
+      sessionTimeout: 30000,
+      heartbeatInterval: 3000,
+      maxBytesPerPartition: 1048576, // 1MB
+      retry: {
+        initialRetryTime: 100,
+        retries: 8
+      },
       ...options
     });
 

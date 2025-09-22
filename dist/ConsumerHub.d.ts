@@ -2,7 +2,7 @@ import { IConf, IMessage } from "./types";
 import { Handle } from "./MessageHandler";
 import { StreamHandler } from "./StreamHandler";
 export interface IConsumerProcess {
-    process(msg: IMessage): void;
+    process(msg: IMessage<any>): void;
 }
 export interface IRawProcessor {
     process: Handle;

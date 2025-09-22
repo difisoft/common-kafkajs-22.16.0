@@ -32,9 +32,9 @@ declare class SendRequest extends SendRequestCommon {
     constructor(conf: IConf, consumerOptions: any, initListener?: boolean, topicConf?: any, handleSendError?: (e: Error) => boolean, producerOptions?: any, readyCallback?: (isReady: boolean) => void, expiredIn?: number, preferBatch?: boolean);
     protected changeProducerStatus(isReady: boolean): void;
     private fireStatus;
-    sendRequest(transactionId: string, topic: string, uri: string, data: any, timeout?: number): Promise<IMessage>;
-    sendRequestAsync(transactionId: string, topic: string, uri: string, data: any, timeout?: number): Promise<IMessage>;
-    sendRequestBase(transactionId: string, topic: string, uri: string, data: any, subject: PromiseState<IMessage>, timeout?: number): void;
+    sendRequest(transactionId: string, topic: string, uri: string, data: any, timeout?: number): Promise<IMessage<any>>;
+    sendRequestAsync(transactionId: string, topic: string, uri: string, data: any, timeout?: number): Promise<IMessage<any>>;
+    sendRequestBase(transactionId: string, topic: string, uri: string, data: any, subject: PromiseState<IMessage<any>>, timeout?: number): void;
     protected reallySendMessage: (message: ISendMessage) => void;
     protected timeout(message: ISendMessage): void;
     private respondData;
@@ -43,5 +43,5 @@ declare class SendRequest extends SendRequestCommon {
 }
 declare function create(conf: IConf, consumerOptions: any, initResponseListener?: boolean, topicConf?: any, producerOptions?: any, readyCallback?: (isReady: boolean) => void): void;
 declare function getInstance(): SendRequest;
-declare function getResponse<T>(msg: IMessage): T;
+declare function getResponse<T>(msg: IMessage<any>): T;
 export { SendRequest, SendRequestCommon, create, getInstance, getResponse };

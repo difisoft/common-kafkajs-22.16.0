@@ -202,17 +202,17 @@ class SendRequest extends SendRequestCommon {
     this.readyStatusUpdate?.(this.consumerReady && this.producerReady);
   }
 
-  public async sendRequest(transactionId: string, topic: string, uri: string, data: any, timeout?: number): Promise<IMessage> {
+  public async sendRequest(transactionId: string, topic: string, uri: string, data: any, timeout?: number): Promise<IMessage<any>> {
     return this.sendRequestAsync(transactionId, topic, uri, data, timeout);
   }
 
-  public async sendRequestAsync(transactionId: string, topic: string, uri: string, data: any, timeout?: number): Promise<IMessage> {
-    const promise: PromiseState<IMessage> = new PromiseState();
+  public async sendRequestAsync(transactionId: string, topic: string, uri: string, data: any, timeout?: number): Promise<IMessage<any>> {
+    const promise: PromiseState<IMessage<any>> = new PromiseState();
     this.sendRequestBase(transactionId, topic, uri, data, promise, timeout);
     return promise.promise();
   };
 
-  public sendRequestBase(transactionId: string, topic: string, uri: string, data: any, subject: PromiseState<IMessage>, timeout?: number) {
+  public sendRequestBase(transactionId: string, topic: string, uri: string, data: any, subject: PromiseState<IMessage<any>>, timeout?: number) {
     const message: ISendMessage = this.createMessage(transactionId, topic, uri, data, MessageType.REQUEST
       , this.responseTopic, "REQUEST_RESPONSE", undefined, timeout);
     message.subject = subject;
@@ -239,7 +239,7 @@ class SendRequest extends SendRequestCommon {
     }
   }
 
-  private respondData(message: ISendMessage, data: IMessage) {
+  private respondData(message: ISendMessage, data: IMessage<any>) {
     if (message.subject == null) {
       return;
     }
@@ -263,7 +263,7 @@ class SendRequest extends SendRequestCommon {
     } catch (e) {
       logger.error("fail to handle message time", e);
     }
-    const msg: IMessage = JSON.parse(msgStr);
+    const msg: IMessage<any> = JSON.parse(msgStr);
     const data =  this.requestedMessages.get(msg.messageId);
     if (data != null) {
       this.respondData(data, msg);
@@ -293,7 +293,7 @@ function getInstance(): SendRequest {
 }
 
 
-function getResponse<T>(msg: IMessage): T {
+function getResponse<T>(msg: IMessage<any>): T {
   if (msg.data != null) {
     const response: Models.IResponse = msg.data;
     if (response.status != null) {

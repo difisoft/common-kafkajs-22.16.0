@@ -4,10 +4,10 @@ import { getInstance, SendRequest } from "@/SendRequest";
 import { IKafkaMessage } from "@/StreamHandler";
 
 declare type HandleResult = Promise<any> | boolean;
-declare type Handle = (msg: IMessage, originalMessage?: IKafkaMessage) => HandleResult;
+declare type Handle = (msg: IMessage<any>, originalMessage?: IKafkaMessage) => HandleResult;
 
 class MessageHandler {
-  protected activeRequestMap: {[k: string]: IMessage} = {};
+  protected activeRequestMap: {[k: string]: IMessage<any>} = {};
   private timeoutinMs?: number;
   private requestId: number = new Date().getTime();
   private sendRequest: SendRequest;
@@ -28,14 +28,14 @@ class MessageHandler {
     }
   }
 
-  private getMsgHandlerUniqueId(msg: IMessage) {
+  private getMsgHandlerUniqueId(msg: IMessage<any>) {
     if (msg.msgHandlerUniqueId == null) {
       msg.msgHandlerUniqueId = `${msg.transactionId}_${msg.messageId}_${this.requestId}`;
     }
     return msg.msgHandlerUniqueId;
   }
 
-  public getActiveMessage: (msgId: string) => IMessage | undefined = (msgId: string) => {
+  public getActiveMessage: (msgId: string) => IMessage<any> | undefined = (msgId: string) => {
     return this.activeRequestMap[msgId];
   };
 
@@ -48,7 +48,7 @@ class MessageHandler {
       const startTime: [number, number] = process.hrtime();
       let diff: [number, number] | null = null;
       logger.info(`receive msg: ${msgString}`);
-      const msg: IMessage = JSON.parse(msgString);
+      const msg: IMessage<any> = JSON.parse(msgString);
       if (msg.t != null && this.timeoutinMs != null && new Date().getTime() - msg.t > this.timeoutinMs) {
         logger.warn(`ignore ${msg.uri} ${msg.transactionId} - ${msg.messageId} since it's time out`);
         return;
@@ -146,7 +146,7 @@ class MessageHandler {
     return getErrorMessage(error);
   };
 
-  private shouldResponse(msg: IMessage) {
+  private shouldResponse(msg: IMessage<any>) {
     return msg.responseDestination != null && msg.responseDestination.topic != null;
   }
 }
