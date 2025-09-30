@@ -1,25 +1,28 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AbstractController = void 0;
+exports.AbstractKafkaController = void 0;
 const common_model_1 = require("common-model");
 const MessageHandler_1 = require("./MessageHandler");
-const StreamHandler_1 = require("./StreamHandler");
-class AbstractController {
-    listenTopic;
+const ConsumerHandler_1 = require("./ConsumerHandler");
+const KafkaRequester_1 = require("./KafkaRequester");
+class AbstractKafkaController {
+    clusterId;
     kafkaOptions;
-    kafkaConsumerOptions;
-    kafkaProducerOptions;
+    consumerOptions;
+    producerOptions;
     uriList = [];
-    constructor(listenTopic, kafkaOptions, kafkaConsumerOptions, kafkaProducerOptions) {
-        this.listenTopic = listenTopic;
+    constructor(clusterId, kafkaOptions, consumerOptions, producerOptions) {
+        this.clusterId = clusterId;
         this.kafkaOptions = kafkaOptions;
-        this.kafkaConsumerOptions = kafkaConsumerOptions;
-        this.kafkaProducerOptions = kafkaProducerOptions;
+        this.consumerOptions = consumerOptions;
+        this.producerOptions = producerOptions;
     }
     init() {
-        const handle = new MessageHandler_1.MessageHandler();
-        common_model_1.logger.info('Starting Kafka stream handler', this.listenTopic);
-        new StreamHandler_1.StreamHandler(this.kafkaConfig, this.kafkaConsumerOptions, [this.listenTopic], (message) => handle.handle(message, this.handle), this.kafkaTopicOptions);
+        const handle = new MessageHandler_1.MessageHandler(new KafkaRequester_1.ProducerCommon(this.clusterId, this.kafkaOptions, this.producerOptions));
+        common_model_1.logger.info('Starting Kafka stream handler', this.clusterId);
+        new ConsumerHandler_1.ConsumerHandler(this.kafkaOptions, this.consumerOptions, [this.clusterId], (message) => handle.handle(message, this.handle), () => {
+            common_model_1.logger.info('Kafka stream handler ready');
+        });
         this.uriList = this.matchingList();
     }
     handle(message, orgMessage) {
@@ -41,4 +44,4 @@ class AbstractController {
         return Promise.reject(new common_model_1.Errors.UriNotFound());
     }
 }
-exports.AbstractController = AbstractController;
+exports.AbstractKafkaController = AbstractKafkaController;

@@ -1,35 +1,31 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SendRequestCommon = exports.SendRequest = void 0;
+exports.ProducerCommon = exports.KafkaRequester = void 0;
 exports.create = create;
 exports.getInstance = getInstance;
 exports.getResponse = getResponse;
-const StreamHandler_1 = require("./StreamHandler");
+const ConsumerHandler_1 = require("./ConsumerHandler");
 const common_model_1 = require("common-model");
 const types_1 = require("./types");
 const kafkajs_1 = require("kafkajs");
 class ProducerCommon {
     clusterId;
-    clientId;
     kafkaOptions;
     producerOptions;
     handleSendError;
     readyStatusUpdate;
     messageId = 0;
     producer;
-    responseTopic;
     bufferedMessages = [];
     producerReady = false;
     preferBatch;
-    constructor(clusterId, clientId, kafkaOptions, producerOptions, handleSendError, readyStatusUpdate, preferBatch) {
+    constructor(clusterId, kafkaOptions, producerOptions, handleSendError, readyStatusUpdate, preferBatch) {
         this.clusterId = clusterId;
-        this.clientId = clientId;
         this.kafkaOptions = kafkaOptions;
         this.producerOptions = producerOptions;
         this.handleSendError = handleSendError;
         this.readyStatusUpdate = readyStatusUpdate;
         this.preferBatch = preferBatch ?? false;
-        this.responseTopic = `${this.clusterId}.response.${this.clientId}`;
         const kafka = new kafkajs_1.Kafka(this.kafkaOptions);
         this.producer = kafka.producer(this.producerOptions);
         this.connect();
@@ -49,9 +45,6 @@ class ProducerCommon {
     changeProducerStatus(isReady) {
         this.producerReady = isReady;
         this.readyStatusUpdate?.(this.producerReady);
-    }
-    getResponseTopic() {
-        return this.responseTopic;
     }
     sendMessage(transactionId, topic, uri, data) {
         const message = this.createMessage(transactionId, topic, uri, data);
@@ -143,18 +136,22 @@ class ProducerCommon {
     }
     ;
 }
-exports.SendRequestCommon = ProducerCommon;
+exports.ProducerCommon = ProducerCommon;
 class KafkaRequester extends ProducerCommon {
+    clientId;
     requestedMessages = new Map();
     expiredIn = 0;
+    responseTopic;
     consumerReady = false;
     constructor(clusterId, clientId, kafkaOptions, consumerOptions, producerOptions, initListener = true, topicConf = {}, handleSendError, readyCallback, expiredIn, preferBatch) {
-        super(clusterId, clientId, kafkaOptions, producerOptions, handleSendError, readyCallback, preferBatch);
+        super(clusterId, kafkaOptions, producerOptions, handleSendError, readyCallback, preferBatch);
+        this.clientId = clientId;
+        this.responseTopic = `${this.clusterId}.response.${this.clientId}`;
         this.expiredIn = expiredIn ? expiredIn : 10000;
         if (initListener) {
             common_model_1.logger.info(`init response listener ${this.responseTopic}`);
             const topicOps = { ...topicConf, "auto.offset.reset": "earliest" };
-            new StreamHandler_1.StreamHandler(this.kafkaOptions, consumerOptions, [this.responseTopic], (data) => this.handlerResponse(data), () => {
+            new ConsumerHandler_1.ConsumerHandler(this.kafkaOptions, consumerOptions, [this.responseTopic], (data) => this.handlerResponse(data), () => {
                 common_model_1.logger.info("response consumer ready");
                 this.consumerReady = true;
                 this.fireStatus();
@@ -164,6 +161,9 @@ class KafkaRequester extends ProducerCommon {
             this.consumerReady = true;
             this.fireStatus();
         }
+    }
+    getResponseTopic() {
+        return this.responseTopic;
     }
     changeProducerStatus(isReady) {
         this.producerReady = isReady;
@@ -240,7 +240,7 @@ class KafkaRequester extends ProducerCommon {
         }
     }
 }
-exports.SendRequest = KafkaRequester;
+exports.KafkaRequester = KafkaRequester;
 let instance = null;
 function create(clusterId, clientId, kafkaOptions, consumerOptions, producerOptions, initResponseListener = true, topicConf = {}, handleSendError, readyCallback) {
     instance = new KafkaRequester(clusterId, clientId, kafkaOptions, consumerOptions, producerOptions, initResponseListener, topicConf, handleSendError, readyCallback);

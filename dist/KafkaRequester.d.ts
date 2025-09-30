@@ -2,21 +2,18 @@ import { IMessage, ISendMessage, MessageType, PromiseState } from "./types";
 import { ConsumerConfig, KafkaConfig, Producer, ProducerConfig } from 'kafkajs';
 declare class ProducerCommon {
     protected clusterId: string;
-    protected clientId: string;
     protected kafkaOptions: KafkaConfig;
     protected producerOptions: ProducerConfig;
     protected handleSendError?: ((e: Error) => boolean) | undefined;
     protected readyStatusUpdate?: ((isReady: boolean) => void) | undefined;
     protected messageId: number;
     protected producer: Producer;
-    protected readonly responseTopic: string;
     protected bufferedMessages: ISendMessage[];
     protected producerReady: boolean;
     protected preferBatch: boolean;
-    constructor(clusterId: string, clientId: string, kafkaOptions: KafkaConfig, producerOptions: ProducerConfig, handleSendError?: ((e: Error) => boolean) | undefined, readyStatusUpdate?: ((isReady: boolean) => void) | undefined, preferBatch?: boolean);
+    constructor(clusterId: string, kafkaOptions: KafkaConfig, producerOptions: ProducerConfig, handleSendError?: ((e: Error) => boolean) | undefined, readyStatusUpdate?: ((isReady: boolean) => void) | undefined, preferBatch?: boolean);
     private connect;
     protected changeProducerStatus(isReady: boolean): void;
-    getResponseTopic(): string;
     sendMessage(transactionId: string, topic: string, uri: string, data: any): void;
     sendRaw(topic: string, data: any): void;
     sendForwardMessage(originMessage: any, newTopic: string, newUri: string): void;
@@ -29,10 +26,13 @@ declare class ProducerCommon {
     protected createMessage(transactionId: string | number, topic: string, uri: string, data: any, messageType?: MessageType, responseTopic?: string, responseUri?: string, messageId?: string, timeout?: number): ISendMessage;
 }
 declare class KafkaRequester extends ProducerCommon {
+    protected readonly clientId: string;
     private requestedMessages;
     private readonly expiredIn;
+    private readonly responseTopic;
     private consumerReady;
     constructor(clusterId: string, clientId: string, kafkaOptions: KafkaConfig, consumerOptions: ConsumerConfig, producerOptions: ProducerConfig, initListener?: boolean, topicConf?: any, handleSendError?: (e: Error) => boolean, readyCallback?: (isReady: boolean) => void, expiredIn?: number, preferBatch?: boolean);
+    getResponseTopic(): string;
     protected changeProducerStatus(isReady: boolean): void;
     private fireStatus;
     sendRequest(transactionId: string, topic: string, uri: string, data: any, timeout?: number): Promise<IMessage<any>>;
@@ -47,4 +47,4 @@ declare class KafkaRequester extends ProducerCommon {
 declare function create(clusterId: string, clientId: string, kafkaOptions: KafkaConfig, consumerOptions: ConsumerConfig, producerOptions: ProducerConfig, initResponseListener?: boolean, topicConf?: any, handleSendError?: (e: Error) => boolean, readyCallback?: (isReady: boolean) => void): void;
 declare function getInstance(): KafkaRequester;
 declare function getResponse<T>(msg: IMessage<any>): T;
-export { KafkaRequester as SendRequest, ProducerCommon as SendRequestCommon, create, getInstance, getResponse };
+export { KafkaRequester, ProducerCommon, create, getInstance, getResponse };

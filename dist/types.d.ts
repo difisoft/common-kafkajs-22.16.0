@@ -1,11 +1,3 @@
-import { ConsumerConfig, ProducerConfig } from 'kafkajs';
-interface IConf {
-    clientId: string;
-    clusterId: string;
-    kafkaUrls: string[];
-    consumerConfig?: ConsumerConfig;
-    producerConfig?: ProducerConfig;
-}
 declare enum MessageType {
     MESSAGE = "MESSAGE",
     REQUEST = "REQUEST",
@@ -52,4 +44,4 @@ declare const STREAM_STATE: {
     FINSISH: string;
     ERROR: string;
 };
-export { IConf, MessageType, ISendMessage, IMessage, IResponseDestination, PromiseState, STREAM_STATE, };
+export { MessageType, ISendMessage, IMessage, IResponseDestination, PromiseState, STREAM_STATE, };

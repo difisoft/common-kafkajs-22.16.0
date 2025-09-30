@@ -1,7 +1,9 @@
 import { Errors, logger } from 'common-model';
 import { HandleResult, MessageHandler } from './MessageHandler';
-import { IKafkaMessage, StreamHandler } from './StreamHandler';
-import { IConf, IMessage } from './types';
+import { IKafkaMessage, ConsumerHandler } from './ConsumerHandler';
+import { IMessage } from './types';
+import { ConsumerConfig, KafkaConfig, ProducerConfig } from 'kafkajs';
+import { ProducerCommon } from './KafkaRequester';
 
 export interface IContext<T> {
   id: string;
@@ -13,31 +15,35 @@ export interface IContext<T> {
 export type ApiHandler<T> = (request: T, ctx: IContext<T>) => HandleResult;
 
 export interface ApiEndpoint<T> {
-  uri: string;
+uri: string;
   handler: ApiHandler<T>;
 }
 
-export abstract class AbstractController {
+export abstract class AbstractKafkaController {
 
   private uriList: ApiEndpoint<any>[] = [];
 
   constructor(
-    private readonly listenTopic: string,
-    private readonly kafkaConfig: IConf,
-    private readonly kafkaConsumerOptions?: any,
-    private readonly kafkaTopicOptions?: any
+    private readonly clusterId: string,
+    private readonly kafkaOptions: KafkaConfig,
+    private readonly consumerOptions: ConsumerConfig,
+    private readonly producerOptions: ProducerConfig
   ) {
   }
 
   public init() {
-    const handle: MessageHandler = new MessageHandler();
-    logger.info('Starting Kafka stream handler', this.listenTopic);
-    new StreamHandler(
-      this.kafkaConfig,
-      this.kafkaConsumerOptions,
-      [this.listenTopic],
+    const handle: MessageHandler = new MessageHandler(
+      new ProducerCommon(this.clusterId, this.kafkaOptions, this.producerOptions)
+    );
+    logger.info('Starting Kafka stream handler', this.clusterId);
+    new ConsumerHandler(
+      this.kafkaOptions,
+      this.consumerOptions,
+      [this.clusterId],
       (message: IKafkaMessage) => handle.handle(message, this.handle),
-      this.kafkaTopicOptions
+      () => {
+        logger.info('Kafka stream handler ready');
+      }
     );
     this.uriList = this.matchingList();
   }

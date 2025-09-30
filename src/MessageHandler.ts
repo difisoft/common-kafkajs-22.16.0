@@ -1,7 +1,8 @@
 import { IMessage } from "@/types";
 import { logger, Errors, Models } from "common-model";
-import { getInstance, SendRequest } from "@/SendRequest";
-import { IKafkaMessage } from "@/StreamHandler";
+import { Producer } from "kafkajs";
+import { ProducerCommon } from "@/KafkaRequester";
+import { IKafkaMessage } from "@/ConsumerHandler";
 
 declare type HandleResult = Promise<any> | boolean;
 declare type Handle = (msg: IMessage<any>, originalMessage?: IKafkaMessage) => HandleResult;
@@ -10,14 +11,8 @@ class MessageHandler {
   protected activeRequestMap: {[k: string]: IMessage<any>} = {};
   private timeoutinMs?: number;
   private requestId: number = new Date().getTime();
-  private sendRequest: SendRequest;
   
-  constructor(sendRequest: SendRequest | null | undefined = null, timeoutinMs?: number) {
-    if (sendRequest == null) {
-      this.sendRequest = getInstance();
-    } else {
-      this.sendRequest = sendRequest;
-    }
+  constructor(private producer: ProducerCommon, timeoutinMs?: number) {
     this.timeoutinMs = timeoutinMs;
     if (this.timeoutinMs == null && process.env.TRADEX_ENV_DEFAULT_REQUEST_TIMEOUT != null  && process.env.TRADEX_ENV_DEFAULT_REQUEST_TIMEOUT !== '') {
       try {
@@ -59,7 +54,7 @@ class MessageHandler {
       }
       const shouldResponse = this.shouldResponse(msg);
       if (shouldResponse && msg.uri === "/healthcheck") {
-        this.sendRequest.sendResponse(
+        this.producer.sendResponse(
           msg.transactionId,
           msg.messageId,
           msg.responseDestination!.topic,
@@ -77,7 +72,7 @@ class MessageHandler {
         if (shouldResponse) {
           diff = process.hrtime(startTime);
           logger.info(`process request ${msg.uri} took ${diff[0]}.${diff[1]} seconds`);
-          this.sendRequest.sendResponse(
+          this.producer.sendResponse(
             msg.transactionId,
             msg.messageId,
             msg.responseDestination!.topic,
@@ -100,7 +95,7 @@ class MessageHandler {
             return;
           }
           if (shouldResponse) {
-            this.sendRequest.sendResponse(
+            this.producer.sendResponse(
               msg.transactionId,
               msg.messageId,
               msg.responseDestination!.topic,
@@ -115,7 +110,7 @@ class MessageHandler {
           delete this.activeRequestMap[this.getMsgHandlerUniqueId(msg)];
           try {
             if (shouldResponse) {
-              this.sendRequest.sendResponse(
+              this.producer.sendResponse(
                 <string>msg.transactionId,
                 msg.messageId,
                 msg.responseDestination!.topic,

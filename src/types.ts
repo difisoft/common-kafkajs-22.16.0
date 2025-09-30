@@ -1,12 +1,3 @@
-import { ConsumerConfig, ProducerConfig } from 'kafkajs';
-
-interface IConf {
-  clientId: string;
-  clusterId: string;
-  kafkaUrls: string[];
-  consumerConfig?: ConsumerConfig;
-  producerConfig?: ProducerConfig;
-}
 
 enum MessageType {
   MESSAGE = 'MESSAGE',
@@ -78,7 +69,6 @@ const STREAM_STATE = {
 };
 
 export {
-  IConf,
   MessageType,
   ISendMessage,
   IMessage,

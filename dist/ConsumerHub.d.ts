@@ -1,6 +1,7 @@
-import { IConf, IMessage } from "./types";
+import { IMessage } from "./types";
 import { Handle } from "./MessageHandler";
-import { StreamHandler } from "./StreamHandler";
+import { ConsumerHandler } from "./ConsumerHandler";
+import { ConsumerConfig, KafkaConfig } from "kafkajs";
 export interface IConsumerProcess {
     process(msg: IMessage<any>): void;
 }
@@ -8,21 +9,20 @@ export interface IRawProcessor {
     process: Handle;
 }
 export declare class ConsumerHub {
-    private conf;
-    private options;
+    private kafkaOptions;
+    private consumerOptions;
     private rawMapping;
     private mapping;
-    private topicConf;
     private readyCallback?;
     private rawHandle;
     private handle;
     private stream;
-    constructor(conf: IConf, options: any, rawMapping: {
+    constructor(kafkaOptions: KafkaConfig, consumerOptions: ConsumerConfig, rawMapping: {
         [key: string]: IRawProcessor;
     }, mapping: {
         [key: string]: IConsumerProcess;
-    }, topicConf?: any, readyCallback?: (() => void) | undefined);
-    createStream(): StreamHandler;
+    }, readyCallback?: (() => void) | undefined);
+    createStream(): ConsumerHandler;
     addProcess(topic: string, process: IConsumerProcess): void;
     addRawProcess(topic: string, process: IRawProcessor): void;
 }

@@ -2,24 +2,22 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConsumerHub = void 0;
 const MessageHandler_1 = require("./MessageHandler");
-const StreamHandler_1 = require("./StreamHandler");
+const ConsumerHandler_1 = require("./ConsumerHandler");
 const common_model_1 = require("common-model");
 class ConsumerHub {
-    conf;
-    options;
+    kafkaOptions;
+    consumerOptions;
     rawMapping;
     mapping;
-    topicConf;
     readyCallback;
     rawHandle;
     handle;
     stream;
-    constructor(conf, options, rawMapping, mapping, topicConf = {}, readyCallback) {
-        this.conf = conf;
-        this.options = options;
+    constructor(kafkaOptions, consumerOptions, rawMapping, mapping, readyCallback) {
+        this.kafkaOptions = kafkaOptions;
+        this.consumerOptions = consumerOptions;
         this.rawMapping = rawMapping;
         this.mapping = mapping;
-        this.topicConf = topicConf;
         this.readyCallback = readyCallback;
         this.rawMapping = rawMapping;
         this.mapping = mapping;
@@ -61,7 +59,7 @@ class ConsumerHub {
         if (this.mapping != null) {
             topics.push(...Object.keys(this.mapping));
         }
-        return new StreamHandler_1.StreamHandler(this.conf, this.options, topics, this.handle, this.topicConf, this.readyCallback);
+        return new ConsumerHandler_1.ConsumerHandler(this.kafkaOptions, this.consumerOptions, topics, this.handle, this.readyCallback);
     }
     addProcess(topic, process) {
         if (this.mapping[topic] == null) {

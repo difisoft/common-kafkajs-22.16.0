@@ -1,4 +1,4 @@
-import { IConf } from "./types";
+import { KafkaConfig, ConsumerConfig } from 'kafkajs';
 interface IKafkaMessage {
     value: Buffer;
     size: number;
@@ -11,9 +11,9 @@ interface IKafkaMessage {
 declare class StreamHandler {
     private consumer;
     private isRunning;
-    constructor(conf: IConf, options: any, topics: string[], dataHandler: (data: IKafkaMessage, handler: StreamHandler) => void, topicConf?: any, readyCallback?: () => void);
+    constructor(kafkaOptions: KafkaConfig, consumerOptions: ConsumerConfig, topics: string[], dataHandler: (data: IKafkaMessage, handler: StreamHandler) => void, readyCallback?: () => void);
     private start;
     close(): Promise<void>;
 }
-declare function createBroadcastListener(conf: IConf, options: any, topics: string[], dataHandler: (data: IKafkaMessage, handler: StreamHandler) => void, topicConf?: any): StreamHandler;
+declare function createBroadcastListener(clientId: string, kafkaOptions: KafkaConfig, consumerOptions: ConsumerConfig, topics: string[], dataHandler: (data: IKafkaMessage, handler: StreamHandler) => void): StreamHandler;
 export { StreamHandler, IKafkaMessage, createBroadcastListener };

@@ -1,8 +1,8 @@
 import { 
-  StreamHandler, 
+  ConsumerHandler, 
   IKafkaMessage, 
   createBroadcastListener 
-} from "./StreamHandler";
+} from "./ConsumerHandler";
 import { 
   Handle, 
   HandleResult, 
@@ -12,42 +12,41 @@ import {
 import { 
   create, 
   getInstance, 
-  SendRequest, 
-  SendRequestCommon,
+  KafkaRequester, 
+  ProducerCommon,
   getResponse,
-} from "./SendRequest";
+} from "./KafkaRequester";
 import { 
-  IConf, 
   IMessage,
   STREAM_STATE,
   IResponseDestination,
   ISendMessage, 
   MessageType 
 } from "./types";
-import {
-  IConsumerProcess,
-  IRawProcessor,
-  ConsumerHub,
-} from "./ConsumerHub";
 import { 
-  AbstractController,
+  AbstractKafkaController,
   ApiEndpoint,
   ApiHandler,
   IContext,
-} from "./AbstractController";
+} from "./AbstractKafkaController";
+
+import { 
+  ConsumerConfig, 
+  ProducerConfig,
+  KafkaConfig,
+} from 'kafkajs';
 
 export {
-  StreamHandler,
+  ConsumerHandler,
   IKafkaMessage,
   createBroadcastListener,
-  SendRequest,
-  SendRequestCommon,
+  KafkaRequester,
+  ProducerCommon,
   create,
   getInstance,
   MessageType,
   MessageHandler,
   getErrorMessage,
-  IConf,
   ISendMessage,
   IMessage,
   IResponseDestination,
@@ -55,11 +54,11 @@ export {
   Handle,
   getResponse,
   STREAM_STATE,
-  IConsumerProcess,
-  IRawProcessor,
-  ConsumerHub,
-  AbstractController,
+  AbstractKafkaController as AbstractController,
   ApiEndpoint,
   ApiHandler,
   IContext,
+  ConsumerConfig, 
+  ProducerConfig,
+  KafkaConfig,
 };

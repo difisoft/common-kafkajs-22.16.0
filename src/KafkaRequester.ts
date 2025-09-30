@@ -1,38 +1,28 @@
-import { IKafkaMessage, StreamHandler } from "./StreamHandler";
+import { IKafkaMessage, ConsumerHandler } from "./ConsumerHandler";
 import { logger, Errors, Models, Utils } from "common-model";
-import { IConf, IMessage, ISendMessage, MessageType, PromiseState } from "./types";
-import { Kafka, Producer, ProducerRecord } from 'kafkajs';
+import { IMessage, ISendMessage, MessageType, PromiseState } from "./types";
+import { ConsumerConfig, Kafka, KafkaConfig, Producer, ProducerConfig, ProducerRecord } from 'kafkajs';
 
-class SendRequestCommon {
+class ProducerCommon {
   protected messageId: number = 0;
   protected producer: Producer;
-  protected readonly responseTopic: string;
   protected bufferedMessages: ISendMessage[] = [];
   protected producerReady: boolean = false;
   protected preferBatch: boolean;
 
   constructor(
-    protected conf: IConf,
+    protected clusterId: string,
+    protected kafkaOptions: KafkaConfig,
+    protected producerOptions: ProducerConfig,
     protected handleSendError?: (e: Error) => boolean,
-    producerOptions?: any,
-    topicOptions?: any,
     protected readyStatusUpdate?: (isReady: boolean) => void,
     preferBatch?: boolean
   ) {
     this.preferBatch = preferBatch ?? false;
-    this.responseTopic = `${this.conf.clusterId}.response.${this.conf.clientId}`;
 
-    const kafka = new Kafka({
-      clientId: conf.clientId,
-      brokers: conf.kafkaUrls,
-      ...conf.producerConfig
-    });
+    const kafka = new Kafka(this.kafkaOptions);
 
-    this.producer = kafka.producer({
-      allowAutoTopicCreation: true,
-      transactionTimeout: 30000,
-      ...producerOptions
-    });
+    this.producer = kafka.producer(this.producerOptions);
 
     this.connect();
   }
@@ -52,10 +42,6 @@ class SendRequestCommon {
   protected changeProducerStatus(isReady: boolean) {
     this.producerReady = isReady;
     this.readyStatusUpdate?.(this.producerReady);
-  }
-
-  public getResponseTopic(): string {
-    return this.responseTopic;
   }
 
   public sendMessage(transactionId: string, topic: string, uri: string, data: any): void {
@@ -140,7 +126,7 @@ class SendRequestCommon {
       topic: topic,
       message: {
         messageType: messageType,
-        sourceId: this.conf.clusterId,
+        sourceId: this.clusterId,
         messageId: messageId ? messageId : this.getMessageId(),
         transactionId: transactionId,
         uri: uri,
@@ -158,30 +144,37 @@ class SendRequestCommon {
   };
 }
 
-class SendRequest extends SendRequestCommon {
+class KafkaRequester extends ProducerCommon {
   private requestedMessages: Map<string, ISendMessage> = new Map<string, ISendMessage>();
   private readonly expiredIn: number = 0;
-
+  private readonly responseTopic: string;
   private consumerReady: boolean = false;
 
   constructor(
-    conf: IConf,
-    consumerOptions: any,
+    clusterId: string,
+    protected readonly clientId: string,
+    kafkaOptions: KafkaConfig,
+    consumerOptions: ConsumerConfig,
+    producerOptions: ProducerConfig,
     initListener: boolean = true,
     topicConf: any = {},
     handleSendError?: (e: Error) => boolean,
-    producerOptions?: any,
     readyCallback?: (isReady: boolean) => void,
     expiredIn?: number,
     preferBatch?: boolean
   ) {
-    super(conf, handleSendError, producerOptions, topicConf, readyCallback, preferBatch);
+    super(clusterId, kafkaOptions, producerOptions, handleSendError, readyCallback, preferBatch);
+    this.responseTopic = `${this.clusterId}.response.${this.clientId}`;
     this.expiredIn = expiredIn ? expiredIn : 10000;
     if (initListener) {
       logger.info(`init response listener ${this.responseTopic}`);
       const topicOps = {...topicConf, "auto.offset.reset": "earliest"};
-      new StreamHandler(this.conf, consumerOptions, [this.responseTopic]
-        , (data: IKafkaMessage) => this.handlerResponse(data), topicOps, () => {
+      new ConsumerHandler(
+        this.kafkaOptions,
+        consumerOptions,
+        [this.responseTopic],
+        (data: IKafkaMessage) => this.handlerResponse(data),
+        () => {
           logger.info("response consumer ready");
           this.consumerReady = true;
           this.fireStatus();
@@ -191,6 +184,10 @@ class SendRequest extends SendRequestCommon {
       this.consumerReady = true;
       this.fireStatus();
     }
+  }
+
+  public getResponseTopic(): string {
+    return this.responseTopic;
   }
 
   protected changeProducerStatus(isReady: boolean) {
@@ -274,18 +271,23 @@ class SendRequest extends SendRequestCommon {
   }
 }
 
-let instance: SendRequest | null = null;
+let instance: KafkaRequester | null = null;
 
-function create(conf: IConf, consumerOptions: any,
-                initResponseListener: boolean = true,
-                topicConf: any = {},
-                producerOptions: any = {},
-                readyCallback?: (isReady: boolean) => void
+function create(
+  clusterId: string, 
+  clientId: string, 
+  kafkaOptions: KafkaConfig, 
+  consumerOptions: ConsumerConfig,
+  producerOptions: ProducerConfig,
+  initResponseListener: boolean = true,
+  topicConf: any = {},
+  handleSendError?: (e: Error) => boolean,
+  readyCallback?: (isReady: boolean) => void
 ): void {
-  instance = new SendRequest(conf, consumerOptions, initResponseListener, topicConf, undefined, producerOptions, readyCallback);
+  instance = new KafkaRequester(clusterId, clientId, kafkaOptions, consumerOptions, producerOptions, initResponseListener, topicConf, handleSendError, readyCallback);
 }
 
-function getInstance(): SendRequest {
+function getInstance(): KafkaRequester {
   if (instance == null) {
     throw new Error("please call create first");
   }
@@ -308,8 +310,8 @@ function getResponse<T>(msg: IMessage<any>): T {
 }
 
 export {
-  SendRequest,
-  SendRequestCommon,
+  KafkaRequester,
+  ProducerCommon,
   create,
   getInstance,
   getResponse

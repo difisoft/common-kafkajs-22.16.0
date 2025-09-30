@@ -1,5 +1,5 @@
 import { HandleResult } from './MessageHandler';
-import { IKafkaMessage } from './StreamHandler';
+import { IKafkaMessage } from './ConsumerHandler';
 import { IMessage } from './types';
 import { ConsumerConfig, KafkaConfig, ProducerConfig } from 'kafkajs';
 export interface IContext<T> {
@@ -13,13 +13,13 @@ export interface ApiEndpoint<T> {
     uri: string;
     handler: ApiHandler<T>;
 }
-export declare abstract class AbstractController {
-    private readonly listenTopic;
+export declare abstract class AbstractKafkaController {
+    private readonly clusterId;
     private readonly kafkaOptions;
-    private readonly kafkaConsumerOptions?;
-    private readonly kafkaProducerOptions?;
+    private readonly consumerOptions;
+    private readonly producerOptions;
     private uriList;
-    constructor(listenTopic: string, kafkaOptions: KafkaConfig, kafkaConsumerOptions?: ConsumerConfig | undefined, kafkaProducerOptions?: ProducerConfig | undefined);
+    constructor(clusterId: string, kafkaOptions: KafkaConfig, consumerOptions: ConsumerConfig, producerOptions: ProducerConfig);
     init(): void;
     abstract matchingList(): ApiEndpoint<any>[];
     handle(message: IMessage<any>, orgMessage?: IKafkaMessage): HandleResult;

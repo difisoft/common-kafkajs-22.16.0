@@ -1,6 +1,5 @@
-import { Kafka, Consumer, EachMessagePayload } from 'kafkajs';
+import { Kafka, Consumer, EachMessagePayload, KafkaConfig, ConsumerConfig } from 'kafkajs';
 import { logger } from 'common-model';
-import { IConf } from "./types";
 
 interface IKafkaMessage {
   value: Buffer;
@@ -12,26 +11,21 @@ interface IKafkaMessage {
   timestamp: number;
 }
 
-class StreamHandler {
+class ConsumerHandler {
   private consumer: Consumer;
   private isRunning: boolean = false;
 
   constructor(
-    conf: IConf,
-    options: any,
+    kafkaOptions: KafkaConfig,
+    consumerOptions: ConsumerConfig,
     topics: string[],
-    dataHandler: (data: IKafkaMessage, handler: StreamHandler) => void,
-    topicConf: any = {},
+    dataHandler: (data: IKafkaMessage, handler: ConsumerHandler) => void,
     readyCallback?: () => void
   ) {
-    const kafka = new Kafka({
-      clientId: conf.clientId,
-      brokers: conf.kafkaUrls,
-      ...conf.consumerConfig
-    });
+    const kafka = new Kafka(kafkaOptions);
 
     this.consumer = kafka.consumer({
-      groupId: conf.clusterId,
+      ...consumerOptions,
       sessionTimeout: 30000,
       heartbeatInterval: 3000,
       maxBytesPerPartition: 1048576, // 1MB
@@ -39,7 +33,6 @@ class StreamHandler {
         initialRetryTime: 100,
         retries: 8
       },
-      ...options
     });
 
     this.start(topics, dataHandler, readyCallback).catch(err => {
@@ -49,7 +42,7 @@ class StreamHandler {
 
   private async start(
     topics: string[],
-    dataHandler: (data: IKafkaMessage, handler: StreamHandler) => void,
+    dataHandler: (data: IKafkaMessage, handler: ConsumerHandler) => void,
     readyCallback?: () => void
   ) {
     try {
@@ -96,23 +89,20 @@ class StreamHandler {
 }
 
 function createBroadcastListener(
-  conf: IConf,
-  options: any,
+  clientId: string,
+  kafkaOptions: KafkaConfig,
+  consumerOptions: ConsumerConfig,
   topics: string[],
-  dataHandler: (data: IKafkaMessage, handler: StreamHandler) => void,
-  topicConf: any = {}
+  dataHandler: (data: IKafkaMessage, handler: ConsumerHandler) => void,
 ) {
-  const opt = {
-    ...{
-      groupId: conf.clientId,
-    },
-    ...options
-  };
-  return new StreamHandler(conf, opt, topics, dataHandler, topicConf);
+  return new ConsumerHandler(kafkaOptions, {
+    ...consumerOptions,
+    groupId: clientId,
+  }, topics, dataHandler);
 }
 
 export {
-  StreamHandler,
+  ConsumerHandler,
   IKafkaMessage,
   createBroadcastListener
 };

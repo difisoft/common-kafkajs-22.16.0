@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.StreamHandler = void 0;
+exports.ConsumerHandler = void 0;
 exports.createBroadcastListener = createBroadcastListener;
 const kafkajs_1 = require("kafkajs");
 const common_model_1 = require("common-model");
-class StreamHandler {
+class ConsumerHandler {
     consumer;
     isRunning = false;
     constructor(kafkaOptions, consumerOptions, topics, dataHandler, readyCallback) {
@@ -64,9 +64,9 @@ class StreamHandler {
         }
     }
 }
-exports.StreamHandler = StreamHandler;
+exports.ConsumerHandler = ConsumerHandler;
 function createBroadcastListener(clientId, kafkaOptions, consumerOptions, topics, dataHandler) {
-    return new StreamHandler(kafkaOptions, {
+    return new ConsumerHandler(kafkaOptions, {
         ...consumerOptions,
         groupId: clientId,
     }, topics, dataHandler);

@@ -3,19 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MessageHandler = void 0;
 exports.getErrorMessage = getErrorMessage;
 const common_model_1 = require("common-model");
-const SendRequest_1 = require("./SendRequest");
 class MessageHandler {
+    producer;
     activeRequestMap = {};
     timeoutinMs;
     requestId = new Date().getTime();
-    sendRequest;
-    constructor(sendRequest = null, timeoutinMs) {
-        if (sendRequest == null) {
-            this.sendRequest = (0, SendRequest_1.getInstance)();
-        }
-        else {
-            this.sendRequest = sendRequest;
-        }
+    constructor(producer, timeoutinMs) {
+        this.producer = producer;
         this.timeoutinMs = timeoutinMs;
         if (this.timeoutinMs == null && process.env.TRADEX_ENV_DEFAULT_REQUEST_TIMEOUT != null && process.env.TRADEX_ENV_DEFAULT_REQUEST_TIMEOUT !== '') {
             try {
@@ -55,7 +49,7 @@ class MessageHandler {
             }
             const shouldResponse = this.shouldResponse(msg);
             if (shouldResponse && msg.uri === "/healthcheck") {
-                this.sendRequest.sendResponse(msg.transactionId, msg.messageId, msg.responseDestination.topic, msg.responseDestination.uri, {
+                this.producer.sendResponse(msg.transactionId, msg.messageId, msg.responseDestination.topic, msg.responseDestination.uri, {
                     status: "ON",
                 });
                 return;
@@ -67,7 +61,7 @@ class MessageHandler {
                 if (shouldResponse) {
                     diff = process.hrtime(startTime);
                     common_model_1.logger.info(`process request ${msg.uri} took ${diff[0]}.${diff[1]} seconds`);
-                    this.sendRequest.sendResponse(msg.transactionId, msg.messageId, msg.responseDestination.topic, msg.responseDestination.uri, this.getErrorMessage(new common_model_1.Errors.UriNotFound()));
+                    this.producer.sendResponse(msg.transactionId, msg.messageId, msg.responseDestination.topic, msg.responseDestination.uri, this.getErrorMessage(new common_model_1.Errors.UriNotFound()));
                 }
                 delete this.activeRequestMap[this.getMsgHandlerUniqueId(msg)];
                 return;
@@ -86,7 +80,7 @@ class MessageHandler {
                         return;
                     }
                     if (shouldResponse) {
-                        this.sendRequest.sendResponse(msg.transactionId, msg.messageId, msg.responseDestination.topic, msg.responseDestination.uri, this.getErrorMessage(err));
+                        this.producer.sendResponse(msg.transactionId, msg.messageId, msg.responseDestination.topic, msg.responseDestination.uri, this.getErrorMessage(err));
                     }
                     diff = process.hrtime(startTime);
                     common_model_1.logger.info(`handle request ${msg.transactionId} ${msg.messageId} ${msg.uri} took ${diff[0]}.${diff[1]} seconds`);
@@ -95,7 +89,7 @@ class MessageHandler {
                     delete this.activeRequestMap[this.getMsgHandlerUniqueId(msg)];
                     try {
                         if (shouldResponse) {
-                            this.sendRequest.sendResponse(msg.transactionId, msg.messageId, msg.responseDestination.topic, msg.responseDestination.uri, { data: data });
+                            this.producer.sendResponse(msg.transactionId, msg.messageId, msg.responseDestination.topic, msg.responseDestination.uri, { data: data });
                         }
                         diff = process.hrtime(startTime);
                         common_model_1.logger.info(`handle request ${msg.uri} took ${diff[0]}.${diff[1]} seconds`);
