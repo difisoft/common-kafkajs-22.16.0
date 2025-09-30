@@ -31,7 +31,7 @@ declare class KafkaRequester extends ProducerCommon {
     private readonly expiredIn;
     private readonly responseTopic;
     private consumerReady;
-    constructor(clusterId: string, clientId: string, kafkaOptions: KafkaConfig, consumerOptions: ConsumerConfig, producerOptions: ProducerConfig, initListener?: boolean, topicConf?: any, handleSendError?: (e: Error) => boolean, readyCallback?: (isReady: boolean) => void, expiredIn?: number, preferBatch?: boolean);
+    constructor(clusterId: string, clientId: string, kafkaOptions: KafkaConfig, consumerOptions: Omit<ConsumerConfig, "groupId">, producerOptions: ProducerConfig, initListener?: boolean, topicConf?: any, handleSendError?: (e: Error) => boolean, readyCallback?: (isReady: boolean) => void, expiredIn?: number, preferBatch?: boolean);
     getResponseTopic(): string;
     protected changeProducerStatus(isReady: boolean): void;
     private fireStatus;

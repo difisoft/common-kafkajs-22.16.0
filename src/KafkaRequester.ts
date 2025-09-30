@@ -154,7 +154,7 @@ class KafkaRequester extends ProducerCommon {
     clusterId: string,
     protected readonly clientId: string,
     kafkaOptions: KafkaConfig,
-    consumerOptions: ConsumerConfig,
+    consumerOptions: Omit<ConsumerConfig, "groupId">,
     producerOptions: ProducerConfig,
     initListener: boolean = true,
     topicConf: any = {},
@@ -171,7 +171,10 @@ class KafkaRequester extends ProducerCommon {
       const topicOps = {...topicConf, "auto.offset.reset": "earliest"};
       new ConsumerHandler(
         this.kafkaOptions,
-        consumerOptions,
+        {
+          groupId: this.clientId,
+          ...consumerOptions
+        },
         [this.responseTopic],
         (data: IKafkaMessage) => this.handlerResponse(data),
         () => {

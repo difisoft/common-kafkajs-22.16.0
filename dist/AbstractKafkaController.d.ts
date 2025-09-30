@@ -19,7 +19,7 @@ export declare abstract class AbstractKafkaController {
     private readonly consumerOptions;
     private readonly producerOptions;
     private uriList;
-    constructor(clusterId: string, kafkaOptions: KafkaConfig, consumerOptions: ConsumerConfig, producerOptions: ProducerConfig);
+    constructor(clusterId: string, kafkaOptions: KafkaConfig, consumerOptions: Omit<ConsumerConfig, "groupId">, producerOptions: ProducerConfig);
     init(): void;
     abstract matchingList(): ApiEndpoint<any>[];
     handle(message: IMessage<any>, orgMessage?: IKafkaMessage): HandleResult;

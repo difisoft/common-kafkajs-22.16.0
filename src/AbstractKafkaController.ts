@@ -26,7 +26,7 @@ export abstract class AbstractKafkaController {
   constructor(
     private readonly clusterId: string,
     private readonly kafkaOptions: KafkaConfig,
-    private readonly consumerOptions: ConsumerConfig,
+    private readonly consumerOptions: Omit<ConsumerConfig, "groupId">,
     private readonly producerOptions: ProducerConfig
   ) {
   }
@@ -38,7 +38,10 @@ export abstract class AbstractKafkaController {
     logger.info('Starting Kafka stream handler', this.clusterId);
     new ConsumerHandler(
       this.kafkaOptions,
-      this.consumerOptions,
+      {
+        groupId: this.clusterId,
+        ...this.consumerOptions
+      },
       [this.clusterId],
       (message: IKafkaMessage) => handle.handle(message, this.handle),
       () => {

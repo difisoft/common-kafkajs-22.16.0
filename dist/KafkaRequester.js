@@ -151,7 +151,10 @@ class KafkaRequester extends ProducerCommon {
         if (initListener) {
             common_model_1.logger.info(`init response listener ${this.responseTopic}`);
             const topicOps = { ...topicConf, "auto.offset.reset": "earliest" };
-            new ConsumerHandler_1.ConsumerHandler(this.kafkaOptions, consumerOptions, [this.responseTopic], (data) => this.handlerResponse(data), () => {
+            new ConsumerHandler_1.ConsumerHandler(this.kafkaOptions, {
+                groupId: this.clientId,
+                ...consumerOptions
+            }, [this.responseTopic], (data) => this.handlerResponse(data), () => {
                 common_model_1.logger.info("response consumer ready");
                 this.consumerReady = true;
                 this.fireStatus();

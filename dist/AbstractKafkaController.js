@@ -20,7 +20,10 @@ class AbstractKafkaController {
     init() {
         const handle = new MessageHandler_1.MessageHandler(new KafkaRequester_1.ProducerCommon(this.clusterId, this.kafkaOptions, this.producerOptions));
         common_model_1.logger.info('Starting Kafka stream handler', this.clusterId);
-        new ConsumerHandler_1.ConsumerHandler(this.kafkaOptions, this.consumerOptions, [this.clusterId], (message) => handle.handle(message, this.handle), () => {
+        new ConsumerHandler_1.ConsumerHandler(this.kafkaOptions, {
+            groupId: this.clusterId,
+            ...this.consumerOptions
+        }, [this.clusterId], (message) => handle.handle(message, this.handle), () => {
             common_model_1.logger.info('Kafka stream handler ready');
         });
         this.uriList = this.matchingList();
