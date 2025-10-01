@@ -29,6 +29,9 @@ export abstract class AbstractKafkaController {
     private readonly consumerOptions: Omit<ConsumerConfig, "groupId">,
     private readonly producerOptions: ProducerConfig
   ) {
+    // # bind methods to this
+    this.init = this.init.bind(this);
+    this.handle = this.handle.bind(this);
   }
 
   public init() {

@@ -16,6 +16,9 @@ class AbstractKafkaController {
         this.kafkaOptions = kafkaOptions;
         this.consumerOptions = consumerOptions;
         this.producerOptions = producerOptions;
+        // # bind methods to this
+        this.init = this.init.bind(this);
+        this.handle = this.handle.bind(this);
     }
     init() {
         const handle = new MessageHandler_1.MessageHandler(new KafkaRequester_1.ProducerCommon(this.clusterId, this.kafkaOptions, this.producerOptions));
