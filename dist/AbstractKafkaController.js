@@ -1,10 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AbstractKafkaController = void 0;
+exports.convertContextType = convertContextType;
 const common_model_1 = require("common-model");
 const MessageHandler_1 = require("./MessageHandler");
 const ConsumerHandler_1 = require("./ConsumerHandler");
+const types_1 = require("./types");
 const KafkaRequester_1 = require("./KafkaRequester");
+function convertContextType(ctx, data) {
+    return {
+        id: ctx.id,
+        txId: ctx.txId,
+        orgMsg: (0, types_1.convertMessageType)(ctx.orgMsg, data),
+        requestId: ctx.requestId,
+    };
+}
 class AbstractKafkaController {
     clusterId;
     kafkaOptions;

@@ -39,9 +39,10 @@ declare interface IMessage<T> {
     streamIndex?: number;
     msgHandlerUniqueId?: string;
 }
+declare function convertMessageType<T, R>(message: IMessage<T>, data: R): IMessage<R>;
 declare const STREAM_STATE: {
     NORMAL: string;
     FINSISH: string;
     ERROR: string;
 };
-export { MessageType, ISendMessage, IMessage, IResponseDestination, PromiseState, STREAM_STATE, };
+export { MessageType, ISendMessage, IMessage, IResponseDestination, PromiseState, STREAM_STATE, convertMessageType, };

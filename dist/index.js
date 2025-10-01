@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AbstractController = exports.STREAM_STATE = exports.getResponse = exports.getErrorMessage = exports.MessageHandler = exports.MessageType = exports.getInstance = exports.create = exports.ProducerCommon = exports.KafkaRequester = exports.createBroadcastListener = exports.ConsumerHandler = void 0;
+exports.convertMessageType = exports.convertContextType = exports.AbstractController = exports.STREAM_STATE = exports.getResponse = exports.getErrorMessage = exports.MessageHandler = exports.MessageType = exports.getInstance = exports.create = exports.ProducerCommon = exports.KafkaRequester = exports.createBroadcastListener = exports.ConsumerHandler = void 0;
 const ConsumerHandler_1 = require("./ConsumerHandler");
 Object.defineProperty(exports, "ConsumerHandler", { enumerable: true, get: function () { return ConsumerHandler_1.ConsumerHandler; } });
 Object.defineProperty(exports, "createBroadcastListener", { enumerable: true, get: function () { return ConsumerHandler_1.createBroadcastListener; } });
@@ -16,5 +16,7 @@ Object.defineProperty(exports, "getResponse", { enumerable: true, get: function 
 const types_1 = require("./types");
 Object.defineProperty(exports, "STREAM_STATE", { enumerable: true, get: function () { return types_1.STREAM_STATE; } });
 Object.defineProperty(exports, "MessageType", { enumerable: true, get: function () { return types_1.MessageType; } });
+Object.defineProperty(exports, "convertMessageType", { enumerable: true, get: function () { return types_1.convertMessageType; } });
 const AbstractKafkaController_1 = require("./AbstractKafkaController");
 Object.defineProperty(exports, "AbstractController", { enumerable: true, get: function () { return AbstractKafkaController_1.AbstractKafkaController; } });
+Object.defineProperty(exports, "convertContextType", { enumerable: true, get: function () { return AbstractKafkaController_1.convertContextType; } });

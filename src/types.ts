@@ -62,6 +62,14 @@ declare interface IMessage<T> {
   msgHandlerUniqueId?: string; // this will included by request handler automatically
 }
 
+function convertMessageType<T, R>(message: IMessage<T>, data: R): IMessage<R> {
+  return {
+    ...message,
+    messageType: message.messageType,
+    data: data,
+  };
+}
+
 const STREAM_STATE = {
   NORMAL: "NORMAL",
   FINSISH: "FINSISH",
@@ -75,4 +83,5 @@ export {
   IResponseDestination,
   PromiseState,
   STREAM_STATE,
+  convertMessageType,
 };

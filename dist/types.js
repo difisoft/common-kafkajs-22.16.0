@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.STREAM_STATE = exports.PromiseState = exports.MessageType = void 0;
+exports.convertMessageType = convertMessageType;
 var MessageType;
 (function (MessageType) {
     MessageType["MESSAGE"] = "MESSAGE";
@@ -30,6 +31,13 @@ class PromiseState {
     }
 }
 exports.PromiseState = PromiseState;
+function convertMessageType(message, data) {
+    return {
+        ...message,
+        messageType: message.messageType,
+        data: data,
+    };
+}
 const STREAM_STATE = {
     NORMAL: "NORMAL",
     FINSISH: "FINSISH",

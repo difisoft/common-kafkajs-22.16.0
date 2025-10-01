@@ -1,7 +1,7 @@
 import { Errors, logger } from 'common-model';
 import { HandleResult, MessageHandler } from './MessageHandler';
 import { IKafkaMessage, ConsumerHandler } from './ConsumerHandler';
-import { IMessage } from './types';
+import { convertMessageType, IMessage } from './types';
 import { ConsumerConfig, KafkaConfig, ProducerConfig } from 'kafkajs';
 import { ProducerCommon } from './KafkaRequester';
 
@@ -10,6 +10,15 @@ export interface IContext<T> {
   txId: string;
   orgMsg: IMessage<T>;
   requestId?: string;
+}
+
+export function convertContextType<T, R>(ctx: IContext<T>, data: R): IContext<R> {
+  return {
+    id: ctx.id,
+    txId: ctx.txId,
+    orgMsg: convertMessageType<T, R>(ctx.orgMsg, data),
+    requestId: ctx.requestId,
+  };
 }
 
 export type ApiHandler<T> = (request: T, ctx: IContext<T>) => HandleResult;

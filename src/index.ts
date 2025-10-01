@@ -21,12 +21,14 @@ import {
   STREAM_STATE,
   IResponseDestination,
   ISendMessage, 
-  MessageType 
+  MessageType,
+  convertMessageType,
 } from "./types";
 import { 
   AbstractKafkaController,
   ApiEndpoint,
   ApiHandler,
+  convertContextType,
   IContext,
 } from "./AbstractKafkaController";
 
@@ -61,4 +63,6 @@ export {
   ConsumerConfig, 
   ProducerConfig,
   KafkaConfig,
+  convertContextType,
+  convertMessageType,
 };

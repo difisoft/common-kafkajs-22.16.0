@@ -8,6 +8,7 @@ export interface IContext<T> {
     orgMsg: IMessage<T>;
     requestId?: string;
 }
+export declare function convertContextType<T, R>(ctx: IContext<T>, data: R): IContext<R>;
 export type ApiHandler<T> = (request: T, ctx: IContext<T>) => HandleResult;
 export interface ApiEndpoint<T> {
     uri: string;
