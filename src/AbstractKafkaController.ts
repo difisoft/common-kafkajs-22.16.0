@@ -24,8 +24,57 @@ export function convertContextType<T, R>(ctx: IContext<T>, data: R): IContext<R>
 export type ApiHandler<T> = (request: T, ctx: IContext<T>) => HandleResult;
 
 export interface ApiEndpoint<T> {
-uri: string;
+  uri: string;
   handler: ApiHandler<T>;
+  /**
+   * if not specify, we will use default scope group
+   * if specify as empty, mean not publish this scope to ADMIN only.
+   */
+  scopeGroups?: string[];
+  /**
+   * auto generated from uri
+   */
+  operationId?: string;
+}
+
+// 1. Break serviceName into words (split kebab and camelcase)
+function splitServiceName(name: string): string[] {
+  // split kebab-case first
+  let parts = name.split('-');
+  // further split each part by camelCase
+  let camelParts: string[] = [];
+  for (const part of parts) {
+    camelParts.push(...part.split(/(?=[A-Z])/));
+  }
+  return camelParts.filter(Boolean);
+}
+
+// 2. For URI, split into method and path, then split path by / and remove empty parts
+function splitUri(uri: string): string[] {
+  let [method, path] = uri.split(':', 2);
+  let parts: string[] = [];
+  if (method) {
+    parts.push(method);
+  }
+  if (path) {
+    parts.push(...path.split('/').filter(Boolean));
+  }
+  return parts;
+}
+
+export function generateOperatorId(serviceName: string, uri: string) {
+  // Convert serviceName (camelCase or kebab-case) and uri ("get:api/v1/foo") to ABC_DEF_GHI_OPQ_URIPARTS
+  // Example: serviceName = "myService-qweRty", uri = "get:api/v1/favourites" 
+  // result: MY_SERVICE_QWE_RTY_GET_API_V1_FAVOURITES
+
+  const nameParts = splitServiceName(serviceName);
+  const uriParts = splitUri(uri);
+
+  // Concatenate, uppercase, join by _
+  return [...nameParts, ...uriParts]
+    .map(x => x.replace(/[^a-zA-Z0-9]/g, '').toUpperCase())
+    .filter(Boolean)
+    .join('_');
 }
 
 export abstract class AbstractKafkaController {
@@ -33,6 +82,7 @@ export abstract class AbstractKafkaController {
   private uriList: ApiEndpoint<any>[] = [];
 
   constructor(
+    private readonly serviceName: string,
     private readonly clusterId: string,
     private readonly kafkaOptions: KafkaConfig,
     private readonly consumerOptions: Omit<ConsumerConfig, "groupId">,
@@ -63,7 +113,9 @@ export abstract class AbstractKafkaController {
     this.uriList = this.matchingList();
   }
 
-  public abstract matchingList(): ApiEndpoint<any>[];
+  protected abstract matchingList(): ApiEndpoint<any>[];
+
+  protected abstract getOpenApiFilePath(): string;
 
   public handle(message: IMessage<any>, orgMessage?: IKafkaMessage): HandleResult {
     if (message == null || message.data == null) {

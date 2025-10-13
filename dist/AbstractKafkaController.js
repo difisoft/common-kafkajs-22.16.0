@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AbstractKafkaController = void 0;
 exports.convertContextType = convertContextType;
+exports.generateOperatorId = generateOperatorId;
 const common_model_1 = require("common-model");
 const MessageHandler_1 = require("./MessageHandler");
 const ConsumerHandler_1 = require("./ConsumerHandler");
@@ -15,13 +16,50 @@ function convertContextType(ctx, data) {
         requestId: ctx.requestId,
     };
 }
+// 1. Break serviceName into words (split kebab and camelcase)
+function splitServiceName(name) {
+    // split kebab-case first
+    let parts = name.split('-');
+    // further split each part by camelCase
+    let camelParts = [];
+    for (const part of parts) {
+        camelParts.push(...part.split(/(?=[A-Z])/));
+    }
+    return camelParts.filter(Boolean);
+}
+// 2. For URI, split into method and path, then split path by / and remove empty parts
+function splitUri(uri) {
+    let [method, path] = uri.split(':', 2);
+    let parts = [];
+    if (method) {
+        parts.push(method);
+    }
+    if (path) {
+        parts.push(...path.split('/').filter(Boolean));
+    }
+    return parts;
+}
+function generateOperatorId(serviceName, uri) {
+    // Convert serviceName (camelCase or kebab-case) and uri ("get:api/v1/foo") to ABC_DEF_GHI_OPQ_URIPARTS
+    // Example: serviceName = "myService-qweRty", uri = "get:api/v1/favourites" 
+    // result: MY_SERVICE_QWE_RTY_GET_API_V1_FAVOURITES
+    const nameParts = splitServiceName(serviceName);
+    const uriParts = splitUri(uri);
+    // Concatenate, uppercase, join by _
+    return [...nameParts, ...uriParts]
+        .map(x => x.replace(/[^a-zA-Z0-9]/g, '').toUpperCase())
+        .filter(Boolean)
+        .join('_');
+}
 class AbstractKafkaController {
+    serviceName;
     clusterId;
     kafkaOptions;
     consumerOptions;
     producerOptions;
     uriList = [];
-    constructor(clusterId, kafkaOptions, consumerOptions, producerOptions) {
+    constructor(serviceName, clusterId, kafkaOptions, consumerOptions, producerOptions) {
+        this.serviceName = serviceName;
         this.clusterId = clusterId;
         this.kafkaOptions = kafkaOptions;
         this.consumerOptions = consumerOptions;
